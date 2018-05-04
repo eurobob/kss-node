@@ -237,7 +237,8 @@ class KssBuilderBase {
         // caller recover from the thrown error.
         const supportedBuilders = [
           'builder/twig',
-          'builder/nunjucks'
+          'builder/nunjucks',
+          'builder/liquid'
         ];
         // istanbul ignore if
         if (supportedBuilders.indexOf(builderClass) > -1) {
