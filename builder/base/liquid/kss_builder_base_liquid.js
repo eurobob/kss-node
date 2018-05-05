@@ -51,10 +51,8 @@ class KssBuilderBaseLiquid extends KssBuilderBase {
 
     options.readSectionTemplate = (name, filepath) => {
       return fs.readFileAsync(filepath, 'utf8').then(contents => {
-        return this.engine.parse(contents).then(result => {
-          this.engine.registerTag(name, contents);
-          return contents;
-        });
+        this.engine.registerTag(name, contents);
+        return contents;
       });
     };
 

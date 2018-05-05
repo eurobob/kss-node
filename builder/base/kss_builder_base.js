@@ -893,16 +893,15 @@ class KssBuilderBase {
                     foundTemplate = true;
                     section.custom('markupFile', path.relative(source, file));
                     template.file = file;
-                    loadTemplates.push(
-                      readSectionTemplate(template.name, file).then(() => {
-                        /* eslint-disable max-nested-callbacks */
-                        return loadContext(file).then(context => {
-                          template.context = context;
-                          return Promise.resolve();
-                        });
-                        /* eslint-enable max-nested-callbacks */
-                      })
-                    );
+                    readSectionTemplate(template.name, file).then(() => {
+                      /* eslint-disable max-nested-callbacks */
+                      return loadContext(file).then(context => {
+                        template.context = context;
+                        loadTemplates.push(context);
+                        return Promise.resolve();
+                      });
+                      /* eslint-enable max-nested-callbacks */
+                    });
                   } else if (!foundExample && filename === matchExampleFilename) {
                     foundExample = true;
                     template.exampleName = 'kss-example-' + template.name;
@@ -1089,16 +1088,19 @@ class KssBuilderBase {
           return markupTask.then(() => {
             return exampleTask;
           }).then(template => {
-            section.example = templateRender(template, contextClone(exampleContext));
+            templateRender(template, contextClone(exampleContext)).then(result => {
+              section.example = result;
 
-            section.modifiers.forEach(modifier => {
-              modifier.markup = modifierRender(
-                template,
-                exampleContext,
-                modifier.className
-              );
+              section.modifiers.forEach(modifier => {
+                modifier.markup = modifierRender(
+                  template,
+                  exampleContext,
+                  modifier.className
+                );
+              });
+              return Promise.resolve();
             });
-            return Promise.resolve();
+
           });
         }
       })
@@ -1184,10 +1186,12 @@ class KssBuilderBase {
 
       return getHomepageText.then(() => {
         // Render the template and save it to the destination.
-        return fs.writeFileAsync(
-          path.join(this.options.destination, fileName),
-          templateRender(this.templates[templateName], context)
-        );
+        return templateRender(this.templates[templateName], context).then(result => {
+          return fs.writeFileAsync(
+            path.join(this.options.destination, fileName),
+            result
+          );
+        });
       });
     });
   }
